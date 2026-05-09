@@ -3,17 +3,15 @@
 #include "region.h"
 #include "rlgl.h"
 #include "CelestialBody.h"
+#include "spaceTime.h"
 
 void Input(Region simRegion, Camera *camera){
     if (IsMouseInRegion(&simRegion)) {
         if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT))  HideCursor();
         else ShowCursor(); 
-
         bool camActive = IsMouseButtonDown(MOUSE_BUTTON_RIGHT);
-
-        
         if(camActive){
-            float speed = IsKeyDown(KEY_LEFT_SHIFT) ? 2.f : 0.1f;
+            float speed = IsKeyDown(KEY_LEFT_SHIFT) ? 10.f : 0.1f;
             UpdateCameraPro(camera,
                 (Vector3){
                     (IsKeyDown(KEY_W) - IsKeyDown(KEY_S)) * speed,   
@@ -50,22 +48,44 @@ int main(){
     camera.fovy = 45.f;
     camera.projection = CAMERA_PERSPECTIVE;
 
-    CelestialBody sun = CreateBody("SUN", (Vector3){0, 0, 0}, 33000, 150);
-    CelestialBody earth = CreateBody("EARTH", (Vector3){1000, 0, 0}, 1, 15);
-    MakeOrbit(&bodies[1], &bodies[0]);
+
+    CelestialBody sun         = CreateBody("SUN",     (Vector3){0,    0, 0}, 10000,  300);
+    CelestialBody mercury     = CreateBody("MERCURY", (Vector3){250,  0, 0}, 2.f,    8);
+    CelestialBody venus       = CreateBody("VENUS",   (Vector3){500,  0, 0}, 3.f,   12);
+    CelestialBody earth       = CreateBody("EARTH",   (Vector3){1000, 0, 0}, 4,     15);
+    CelestialBody mars        = CreateBody("MARS",    (Vector3){1500, 0, 0}, 3.f,   14);
+    CelestialBody jupiter     = CreateBody("JUPITER", (Vector3){2000, 0, 0}, 30,    35);
+    CelestialBody saturn      = CreateBody("SATURN",  (Vector3){3000, 0, 0}, 27,    30);
+    CelestialBody uranus      = CreateBody("URANUS",  (Vector3){4000, 0, 0}, 25,    25);
+    CelestialBody neptune     = CreateBody("NEPTUNE", (Vector3){5000, 0, 0}, 28,    27);
+    for(int i = 1; i < sizeof(bodies) / sizeof(bodies[0]); i++){
+        MakeOrbit(i, 0);
+        // MakeOrbit(&bodies[2], &bodies[0]);
+        // MakeOrbit(&bodies[3], &bodies[0]);
+        // MakeOrbit(&bodies[4], &bodies[0]);
+    }
+
+    float timeMultiplier = 10.f;
 
     while(!WindowShouldClose()){
         Input(simRegion, &camera);
-        UpdateBodies(GetFrameTime());
+        float dt = GetFrameTime()*timeMultiplier;
+        UpdateBodies(dt);
         BeginRegion(&simRegion);
             ClearBackground(BLACK);
             BeginMode3D(camera);
+                rlSetClipPlanes(0.01, 20000.0); 
                 DrawBodies();
+                DrawTraces();
+                DrawSpaceFabric();
             EndMode3D();
         EndRegion();
 
         BeginDrawing();
             ClearBackground(BLACK);
+            char fpslabel[12];
+            snprintf(fpslabel, sizeof(fpslabel), "FPS:%d", GetFPS());
+            DrawText(fpslabel, 100, 100, 16, WHITE);
             DrawRegion(&simRegion);
         EndDrawing();
     }
