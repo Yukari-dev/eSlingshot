@@ -44,7 +44,7 @@ int main(){
     MoveRegion(&simRegion, -1, 50);
 
     Camera3D camera = {0};
-    camera.position = (Vector3){100.f, 100.f, 0.f};
+    camera.position = (Vector3){1000.f, 1000.f, 0.f};
     camera.target = (Vector3){0.f, 0.f, 0.f};
     camera.up = (Vector3){0.f, 1, 0.f};
     camera.fovy = 45.f;
@@ -52,9 +52,11 @@ int main(){
 
     CelestialBody sun = CreateBody("SUN", (Vector3){0, 0, 0}, 33000, 150);
     CelestialBody earth = CreateBody("EARTH", (Vector3){1000, 0, 0}, 1, 15);
+    MakeOrbit(&bodies[1], &bodies[0]);
 
     while(!WindowShouldClose()){
         Input(simRegion, &camera);
+        UpdateBodies(GetFrameTime());
         BeginRegion(&simRegion);
             ClearBackground(BLACK);
             BeginMode3D(camera);

@@ -18,6 +18,8 @@ extern int count;
 
 CelestialBody CreateBody(char *name, Vector3 position, float mass, float radius);
 
+void MakeOrbit(CelestialBody *b, CelestialBody *host);
+
 void DrawBodies();
 
 void UpdateBodies(float dt);

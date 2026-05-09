@@ -1,5 +1,7 @@
 #include "CelestialBody.h"
 #include <string.h>
+#include <stdio.h>
+#define G 0.1f
 
 
 CelestialBody bodies[MAX_BODIES] = {0};
@@ -16,6 +18,29 @@ CelestialBody CreateBody(char *name, Vector3 position, float mass, float radius)
         count++;
     }
     return b;
+}
+
+void MakeOrbit(CelestialBody *b, CelestialBody *host) {
+    Vector3 diff = {
+        host->position.x - b->position.x,
+        host->position.y - b->position.y,
+        host->position.z - b->position.z
+    };
+
+    float distSq = diff.x*diff.x + diff.y*diff.y + diff.z*diff.z;
+    float dist   = sqrtf(distSq);
+
+    float speed  = sqrtf((G * host->mass) / dist);
+
+    Vector3 perp = {
+        -diff.z / dist,
+         0,
+         diff.x / dist
+    };
+
+    b->velocity.x = perp.x * speed;
+    b->velocity.y = perp.y * speed;
+    b->velocity.z = perp.z * speed;
 }
 
 void DrawBodies() {
@@ -48,3 +73,39 @@ void DrawBodies() {
         rlPopMatrix();
     }
 }
+
+void UpdateBodies(float dt){
+    for(int i = 0; i < count; i++){
+        Vector3 acceleration = {0, 0, 0};
+        for(int j = 0; j < count; j++){
+            if(i == j) continue;
+            Vector3 posA = bodies[i].position;
+            Vector3 posB = bodies[j].position;
+            float massA = bodies[i].mass;
+            float massB = bodies[j].mass;
+
+            Vector3 diff = (Vector3){
+                posB.x-posA.x,
+                posB.y-posA.y,
+                posB.z-posA.z
+            };
+
+            float distSq = diff.x*diff.x+diff.y*diff.y+diff.z*diff.z;
+            float dist = sqrtf(distSq);
+            float mag    = (G * bodies[j].mass) / distSq;
+
+            acceleration.x += mag * (diff.x / dist);
+            acceleration.y += mag * (diff.y / dist);
+            acceleration.z += mag * (diff.z / dist);
+        }
+        bodies[i].position.x += bodies[i].velocity.x * dt + 0.5f * acceleration.x * dt * dt;
+        bodies[i].position.y += bodies[i].velocity.y * dt + 0.5f * acceleration.y * dt * dt;
+        bodies[i].position.z += bodies[i].velocity.z * dt + 0.5f * acceleration.z * dt * dt;
+
+        bodies[i].velocity.x += acceleration.x * dt;
+        bodies[i].velocity.y += acceleration.y * dt;
+        bodies[i].velocity.z += acceleration.z * dt;
+    }
+}
+
+
