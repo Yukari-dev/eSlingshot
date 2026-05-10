@@ -1,6 +1,7 @@
 #ifndef REGION_H
 #define REGION_H
 #include <raylib.h>
+#include <stddef.h>
 #include <stdbool.h>
 
 typedef struct{
@@ -12,7 +13,7 @@ typedef struct{
     bool hasBorder;
 } Region;
 
-Region CreateRegion(float x, float y, float w, float h);
+Region CreateRegion(float x, float y, float w, float h, bool isTexture, bool hasBorder);
 void DestroyRegion(Region *r);
 
 void BeginRegion(Region *r);

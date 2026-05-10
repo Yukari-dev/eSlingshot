@@ -1,19 +1,21 @@
 #include "region.h"
 #include "border.h"
 
-Region CreateRegion(float x, float y, float w, float h){
+Region CreateRegion(float x, float y, float w, float h, bool isTexture, bool hasBorder){
     Region r = {0};
-    r.texture = LoadRenderTexture(w, h);
+    if(isTexture)
+        r.texture = LoadRenderTexture(w, h);
+    // r.texture = isTexture ? LoadRenderTexture(w, h) : NULL;
     r.dst = (Rectangle){x, y, w, h};
     r.borderThickness = 1.f;
     r.borderColor = WHITE;
-    r.hasBorder = true;
+    r.hasBorder = hasBorder;
     r.active = true;
     return r;
 }
 
 void DestroyRegion(Region *r){
-    if(!r) return;
+    if(!r || r->texture.texture.id == 0) return;
     UnloadRenderTexture(r->texture);
     r->active = false;
 }
@@ -36,7 +38,8 @@ void DrawRegion(Region *r){
         -(float)r->texture.texture.height
     };
 
-    DrawTexturePro(r->texture.texture, src, r->dst, (Vector2){0, 0}, 0.0f, WHITE);
+    if(r->texture.texture.id != 0)
+        DrawTexturePro(r->texture.texture, src, r->dst, (Vector2){0, 0}, 0.0f, WHITE);
     if(r->hasBorder) DrawRegionBorder(r);
 }
 
