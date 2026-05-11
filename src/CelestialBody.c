@@ -137,14 +137,14 @@ void UpdateBodies(float dt){
 
 void InitializeSolarSystem(){
     CreateBody("SUN",     (Vector3){0,    0, 0}, 33000, 500,  0   , BODY_STAR);
-    CreateBody("MERCURY", (Vector3){500,  0, 0}, 2.f,     8,  0.7f, BODY_TERRESTRIAL);
+    CreateBody("MERCURY", (Vector3){500,  500, 0}, 2.f,     8,  0.7f, BODY_TERRESTRIAL);
     CreateBody("VENUS",   (Vector3){1000,  0, 0}, 3.f,    12, 0.6f, BODY_TERRESTRIAL);
-    CreateBody("EARTH",   (Vector3){1500, 0, 0}, 4,      15,  0.4f, BODY_TERRESTRIAL);
+    CreateBody("EARTH",   (Vector3){1500, 0, 0}, 5,      15,  0.4f, BODY_TERRESTRIAL);
     CreateBody("MARS",    (Vector3){2000, 0, 0}, 3.f,    14,  0.45f,BODY_TERRESTRIAL);
-    CreateBody("JUPITER", (Vector3){2500, 0, 0}, 100,     35, 0.5f, BODY_GAS_GIANT);
-    CreateBody("SATURN",  (Vector3){3000, 0, 0}, 27,     30,  0.6f, BODY_GAS_GIANT);
+    CreateBody("JUPITER", (Vector3){0, 0, 2500}, 100,     35, 0.5f, BODY_GAS_GIANT);
+    CreateBody("SATURN",  (Vector3){0, 0, 3000}, 27,     30,  0.6f, BODY_GAS_GIANT);
     CreateBody("URANUS",  (Vector3){4000, 0, 0}, 25,     25,  0.1f, BODY_ICE_GIANT);
-    CreateBody("NEPTUNE", (Vector3){5000, 0, 0}, 28,     27,  0.2f, BODY_ICE_GIANT);
+    CreateBody("NEPTUNE", (Vector3){0, 0, 5000}, 28,     27,  0.2f, BODY_ICE_GIANT);
 
     for (int i = 1; i < bodiesCount; i++)
         MakeOrbit(i, 0);

@@ -67,7 +67,7 @@ void DrawBodyInfoPanel(BodyInfoPanel *b){
     cy += 10;
     
     WidgetMass(&b->panel, b->selected->mass, bodies[0].mass);
-    WidgetRadius(&b->panel, b->selected->radius, bodies[0].radius);
-
+    WidgetRadiusDistance(&b->panel, b->selected, &bodies[0]);
+    WidgetVelocity(&b->panel, b->selected->velocity);
 }
 

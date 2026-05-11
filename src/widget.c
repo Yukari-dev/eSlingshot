@@ -120,8 +120,11 @@ void WidgetMass(Panel *p, float mass, float maxMass){
     p->cursorY += MASS_GRID_ROWS * (MASS_CELL_SIZE + MASS_GRID_GAP) + 8;
 }
 
-void WidgetRadius(Panel *p, float radius, float sunRadius){
+void WidgetRadiusDistance(Panel *p, CelestialBody *body, CelestialBody *host){
     if (!p || !p->active) return;
+
+    float radius = body->radius;
+    float sunRadius = host->radius;
 
 
     Rectangle r = p->dst;
@@ -143,7 +146,7 @@ void WidgetRadius(Panel *p, float radius, float sunRadius){
 
     int centerY = cy + maxR + 4;
     int leftX = cx + maxR;
-    int rightX = cx + pw/4 + maxR + 4;
+    int rightX = cx + pw - maxR + 4;
     
     DrawCircleLines(leftX, centerY, sunR, (Color){60, 60, 60, 255});
     DrawTextEx(globalFont, "SUN", (Vector2){leftX-MeasureTextEx(globalFont, "SUN", 12, 1).x/2, centerY+maxR+4}, 12, 1, (Color){60, 60, 60, 255});
@@ -155,6 +158,142 @@ void WidgetRadius(Panel *p, float radius, float sunRadius){
             centerY + maxR + 3}, 12, 1, (Color){150, 150, 150, 255});
     }
 
+    float maxDistance = 5000.f;
+    float dist = sqrtf(body->position.x * body->position.x + body->position.z * body->position.z);
+    float ratio = (int)fminf(dist/maxDistance,1.f);
+    int dotX = cx + (int)(ratio * pw);
 
+    if(radius != sunRadius){
+        for (int x = cx+sunR; x < cx + pw-bodyR-5; x += 6)
+            DrawRectangle(x, cy + sunR+3, 3, 1, (Color){40, 40, 40, 255});
+
+
+        p->cursorY += 30;
+        cy = r.y+p->cursorY;
+        char distVal[32];
+        snprintf(distVal, sizeof(val), "%.0fKM", dist);
+        DrawTextEx(globalFont, distVal, (Vector2){
+            cx+pw/2-MeasureTextEx(globalFont, distVal, 16, 1).x/2, cy   
+        }, 16, 1, (Color){60, 60, 60, 255});
+        
+        p->cursorY += sunR*2;
+        cy = r.y+p->cursorY;
+
+        int ticks = 8;
+        int startX = cx;
+        for (int i = 0; i <= ticks; i++) {
+            int tx     = startX + (int)((float)i / ticks * pw);
+            int height = (i % 4 == 0) ? 6 : 3;
+            DrawLine(tx, cy, tx, cy - height, (Color){50, 50, 50, 255});
+        }
+        p->cursorY += maxR-10;
+        return;
+    }
     p->cursorY += maxR * 2 + 20;
 }
+
+void WidgetVelocity(Panel *p, Vector3 velocity){
+    if (!p || !p->active) return;
+
+    Rectangle r = p->dst;
+    int cx = r.x + PANEL_PADDING;
+    int cy = r.y + p->cursorY;
+    int pw = r.width - PANEL_PADDING*2;
+
+    DrawTextEx(globalFont, "VELOCITY", (Vector2){cx, cy}, 16, 1, WHITE);
+    
+    p->cursorY += PANEL_LINE_HEIGHT;
+    cy = p->dst.y + p->cursorY;
+    float components[3] = { velocity.x, velocity.y, velocity.z };
+    char  labels[3]     = { 'X', 'Y', 'Z' };
+    float maxSpeed = sqrtf(velocity.x*velocity.x + velocity.y*velocity.y + velocity.z*velocity.z) * 2.f;
+
+    for(int i = 0; i < 3; i++){
+        float val = components[i];
+        float ratio = fmaxf(fminf(val / maxSpeed, 1.f), -1.f);
+        int barW = pw-50;
+        int centerX = cx+16+barW/2;
+        int barY = cy + i * (PANEL_LINE_HEIGHT)+4;
+
+        char label[2] = {labels[i], '\0'};
+        DrawTextEx(globalFont, label, (Vector2){cx, barY-4}, 16,1, (Color){100, 100, 100, 255});
+
+        DrawLine(cx+16, barY+4, cx+16+barW, barY+4, (Color){30, 30, 30, 255});
+        DrawLine(centerX, barY, centerX, barY+8, (Color){30, 30, 30, 255});
+
+        int fillW = (int)(ratio * (barW/2));
+        if(fillW > 0)
+            DrawRectangle(centerX, barY-2, fillW, 4, WHITE);
+        else if(fillW < 0)
+            DrawRectangle(centerX + fillW, barY-2, -fillW, 4, WHITE);
+
+        char valStr[16];
+        snprintf(valStr, sizeof(valStr), "%.1f", val);
+        DrawTextEx(globalFont, valStr,
+            (Vector2){p->dst.x + p->dst.width - PANEL_PADDING - MeasureText(valStr, PANEL_FONT_SIZE),
+            barY - 4}, 16, 1, (Color){150, 150, 150, 255});
+    }
+
+    p->cursorY += 3 * PANEL_LINE_HEIGHT + 8;
+}
+
+void WidgetOrbitalClock(Panel *p, CelestialBody *body){
+    if(!p || !p->active) return;
+
+    Rectangle r = p->dst;
+    int cx = r.x + PANEL_PADDING;
+    int cy = r.y + p->cursorY;
+    int pw = r.width - PANEL_PADDING*2;
+
+    DrawTextEx(globalFont, "ORBITAL POSITION", (Vector2){cx, cy}, PANEL_FONT_SIZE, 1, (Color){100, 100, 100, 255});
+    p->cursorY += PANEL_LINE_HEIGHT;
+    cy = p->dst.y + p->cursorY;
+    
+    int radius = 28;
+    int centerX = r.x + r.width/2;
+    int centerY = cy+radius+4;
+
+    float angle = atan2(body->position.z, body->position.x);
+    if(angle < 0) angle += 2.f * PI;
+    float degrees = angle * (180.f*PI);
+    float percent = angle / (2.f*PI);
+
+    DrawCircleLines(centerX, centerY, radius, (Color){30, 30, 30, 255});
+
+    DrawCircleSector(
+        (Vector2){centerX, centerY},
+        radius - 4,
+        -90,
+        -90 + degrees,
+        36,
+        (Color){60, 60, 60, 255}
+    );
+
+    DrawCircleSectorLines(
+        (Vector2){centerX, centerY},
+        radius,
+        -90,
+        -90 + degrees,
+        36,
+        WHITE
+    );
+
+    float dotAngle = angle - PI / 2.f;
+    int   dotX     = centerX + (int)(cosf(dotAngle) * radius);
+    int   dotY     = centerY + (int)(sinf(dotAngle) * radius);
+    DrawCircle(dotX, dotY, 3, WHITE);
+
+    char pct[8];
+    snprintf(pct, sizeof(pct), "%03d%%", (int)(percent * 100));
+    DrawTextEx(globalFont, pct,
+        (Vector2){centerX - MeasureText(pct, PANEL_FONT_SIZE) / 2,
+        centerY - PANEL_FONT_SIZE / 2},
+        PANEL_FONT_SIZE, 1, WHITE);
+
+    DrawCircle(centerX, centerY - radius, 2, (Color){180, 180, 180, 255});
+
+    p->cursorY += radius * 2 + 20;
+
+}
+
+

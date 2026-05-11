@@ -35,7 +35,7 @@ int main() {
     InitializeSolarSystem();
 
 
-    double timeMultiplier = 1;
+    double timeMultiplier = 2;
 
     while (!WindowShouldClose()) {
         Input(&simRegion, &camera);
@@ -54,13 +54,23 @@ int main() {
                 DrawProbes();
                 DrawProbesTraces();
                 DrawPredictionLine(&camera, &simRegion);
-                for(int i = 0; i < bodiesCount; i++){
-                    if(IsMouseOverBody(&camera, &simRegion, &bodies[i])){
+                bool clickedAny = false;
+
+                for (int i = 0; i < bodiesCount; i++) {
+                    bool isHovering = IsMouseOverBody(&camera, &simRegion, &bodies[i]);
+                    if (bodyInfo.selected == &bodies[i])
                         DrawBodyHovered(&bodies[i]);
-                        if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+                    if (isHovering) {
+                        DrawBodyHovered(&bodies[i]);
+                        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
                             SelectBody(&bodyInfo, &bodies[i]);
+                            clickedAny = true;
+                        }
                     }
                 }
+
+                if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && !clickedAny)
+                    SelectBody(&bodyInfo, NULL);
             EndMode3D();
         EndRegion();
         
