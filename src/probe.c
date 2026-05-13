@@ -13,6 +13,9 @@ Probe *CreateProbe(Vector3 position, Vector3 *dragStart) {
     probe->trace      = malloc(sizeof(Vector3) * TRACE_LENGTH);
     probe->traceIndex = 0;
     probe->traceCount = 0;
+    probe->historyIndex = 0;
+    probe->historyCount = 0;
+    memset(probe->speedHistory, 0, sizeof(probe->speedHistory));
     return probe;
 }
 
@@ -36,6 +39,7 @@ void DrawProbeTraces(Probe *probe) {
 
 void UpdateProbe(Probe *p, float dt){
     if(!p->active || !p->launched) return;
+
     Vector3 acceleration = {0, 0, 0};
     for(int i = 0; i < bodiesCount; i++){
         Vector3 diff = (Vector3){
@@ -59,11 +63,23 @@ void UpdateProbe(Probe *p, float dt){
     p->trace[p->traceIndex] = p->position;
     p->traceIndex = (p->traceIndex + 1) % TRACE_LENGTH;
     if (p->traceCount < TRACE_LENGTH) p->traceCount++;
+
+    float speed = sqrtf(
+        p->velocity.x * p->velocity.x +
+        p->velocity.y * p->velocity.y +
+        p->velocity.z * p->velocity.z
+    );
+    p->speedHistory[p->historyIndex] = speed;
+    p->historyIndex = (p->historyIndex + 1) % SPEED_HISTORY;
+    if (p->historyCount < SPEED_HISTORY) p->historyCount++;
 }
 
 void PredictTrajectory(Probe *p, Vector3 initVel, Vector3 *out, int *outCount) {
     CelestialBody ghost[MAX_BODIES];
     memcpy(ghost, bodies, sizeof(CelestialBody) * bodiesCount);
+
+    for (int i = 0; i < bodiesCount; i++)
+        ghost[i].trace = NULL;
 
     Vector3 pos = p->position;
     Vector3 vel = initVel;
@@ -136,6 +152,9 @@ void DrawPrediction(Vector3 *points, int count) {
 void DrawPredictionLine(Camera3D *camera, Region *simRegion){
     static Vector3 predicted[PREDICT_STEPS];
     static int predictCount = 0;
+    if (probeCount <= 0) return;
+    Probe *last = probes[probeCount-1];
+    if (!last || last->launched) return;
     if (probeCount > 0 && !probes[probeCount-1]->launched) {
         Vector3 worldPos = GetMouseWorldPos(camera, simRegion);
         DrawLine3D(probes[probeCount-1]->position, worldPos, WHITE);

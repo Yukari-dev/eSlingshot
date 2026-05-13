@@ -2,7 +2,7 @@
 #define PROBES_H
 #include "probe.h"
 
-#define MAX_PROBES 16
+#define MAX_PROBES 64
 
 extern Probe *probes[MAX_PROBES];
 extern int probeCount;

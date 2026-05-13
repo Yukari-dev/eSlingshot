@@ -13,5 +13,6 @@ void WidgetMass(Panel *p, float mass, float maxMass);
 void WidgetRadiusDistance(Panel *p, CelestialBody *body, CelestialBody *host);
 void WidgetVelocity(Panel *p, Vector3 velocity);
 void WidgetOrbitalClock(Panel *p, CelestialBody *body);
+void WidgetSpeedGraph(Rectangle dst);
 
 #endif

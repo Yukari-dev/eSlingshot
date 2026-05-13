@@ -112,7 +112,7 @@ void UpdateBodies(float dt){
                 posB.z-posA.z
             };
 
-            float distSq = diff.x*diff.x+diff.y*diff.y+diff.z*diff.z;
+            float distSq = diff.x*diff.x+diff.y*diff.y+diff.z*diff.z; //R*R
             float dist = sqrtf(distSq);
             float mag    = (G * bodies[j].mass) / distSq;
 
@@ -137,6 +137,7 @@ void UpdateBodies(float dt){
 
 void InitializeSolarSystem(){
     CreateBody("SUN",     (Vector3){0,    0, 0}, 33000, 500,  0   , BODY_STAR);
+
     CreateBody("MERCURY", (Vector3){500,  500, 0}, 2.f,     8,  0.7f, BODY_TERRESTRIAL);
     CreateBody("VENUS",   (Vector3){1000,  0, 0}, 3.f,    12, 0.6f, BODY_TERRESTRIAL);
     CreateBody("EARTH",   (Vector3){1500, 0, 0}, 5,      15,  0.4f, BODY_TERRESTRIAL);

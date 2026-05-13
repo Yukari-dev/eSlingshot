@@ -1,7 +1,8 @@
 #ifndef PROBE_H
 #define PROBE_H
 #define TRACE_LENGTH 1500
-#define PREDICT_STEPS 500
+#define PREDICT_STEPS 1000
+#define SPEED_HISTORY 300
 #include <raylib.h>
 #include <stdbool.h>
 #include "region.h"
@@ -15,6 +16,9 @@ typedef struct {
     Vector3 *trace;
     int      traceIndex;
     int      traceCount;
+    float speedHistory[SPEED_HISTORY];
+    int   historyIndex;
+    int   historyCount;
 } Probe;
 
 Probe  *CreateProbe(Vector3 position, Vector3 *dragStart);

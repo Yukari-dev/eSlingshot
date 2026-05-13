@@ -30,14 +30,17 @@ void Input(Region *simRegion, Camera *camera) {
             
             if (probeCount > 0) {
                 Probe *last = probes[probeCount - 1];
-                if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && !last->launched && inRegion) {
+                if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && !last->launched) {
                     float launchScale = 0.1f;
-                    last->velocity = (Vector3){
+                    Vector3 vel = {
                         (last->position.x - worldPos.x) * launchScale,
                         0,
                         (last->position.z - worldPos.z) * launchScale
                     };
-                    last->launched = true;
+                    if (!isnan(vel.x) && !isnan(vel.z) && !isinf(vel.x) && !isinf(vel.z)) {
+                        last->velocity = vel;
+                        last->launched = true;
+                    }
                 }
             }
         }

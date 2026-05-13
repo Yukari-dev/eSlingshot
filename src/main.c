@@ -33,7 +33,9 @@ int main() {
     camera.projection = CAMERA_PERSPECTIVE;
 
     InitializeSolarSystem();
-
+    int sw = GetScreenWidth();
+    int sh = GetScreenHeight();
+    Rectangle bottomBar = { 0, sh - 130, sw, 130 };
 
     double timeMultiplier = 2;
 
@@ -80,6 +82,7 @@ int main() {
             DrawRegion(&simRegion);
             DrawRegion(&leftRegion);
             DrawBodyInfoPanel(&bodyInfo);
+            WidgetSpeedGraph(bottomBar);
 
         EndDrawing();
     }

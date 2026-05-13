@@ -2,6 +2,7 @@
 #include "font.h"
 #include <stdio.h>
 #include <math.h>
+#include "probes.h"
 
 
 static int PX(Panel *p) { return p->dst.x + PANEL_PADDING; }
@@ -296,4 +297,89 @@ void WidgetOrbitalClock(Panel *p, CelestialBody *body){
 
 }
 
+
+void WidgetSpeedGraph(Rectangle dst) {
+    int pad   = 30;
+    int gx    = dst.x + pad;
+    int gy    = dst.y + 10;
+    int gw    = dst.width - pad - 10;
+    int gh    = dst.height - 24;
+ 
+    DrawRectangle(dst.x, dst.y, dst.width, dst.height, (Color){5, 5, 5, 240});
+    DrawRectangleLines(gx, gy, gw, gh, (Color){30, 30, 30, 255});
+ 
+    DrawTextEx(globalFont, "PROBE SPEED / TIME", (Vector2){gx, dst.y -10}, PANEL_FONT_SIZE, 1, (Color){60, 60, 60, 255});
+ 
+    DrawTextEx(globalFont, "SPD", (Vector2){dst.x + 2, gy}, 9, 1, (Color){50, 50, 50, 255});
+ 
+    int ticks = 6;
+    for (int i = 0; i <= ticks; i++) {
+        int tx = gx + (int)((float)i / ticks * gw);
+        DrawLine(tx, gy + gh, tx, gy + gh + 3, (Color){40, 40, 40, 255});
+    }
+ 
+    for (int i = 0; i <= 4; i++) {
+        int ty = gy + (int)((float)i / 4 * gh);
+        DrawLine(gx - 3, ty, gx, ty, (Color){40, 40, 40, 255});
+    }
+ 
+    if (probeCount == 0) {
+        DrawTextEx(globalFont, "NO PROBES", (Vector2){gx + gw/2 - MeasureTextEx(globalFont, "NO PROBES", PANEL_FONT_SIZE, 1).x/2,
+                 gy + gh/2 - PANEL_FONT_SIZE/2}, PANEL_FONT_SIZE, 1, (Color){40, 40, 40, 255});
+        return;
+    }
+ 
+    float maxSpeed = 1.f;
+    for (int p = 0; p < probeCount; p++) {
+        for (int i = 0; i < probes[p]->historyCount; i++)
+            if (probes[p]->speedHistory[i] > maxSpeed)
+                maxSpeed = probes[p]->speedHistory[i];
+    }
+ 
+    char maxStr[16];
+    snprintf(maxStr, sizeof(maxStr), "%.0f", maxSpeed);
+    DrawTextEx(globalFont, maxStr, (Vector2){dst.x + 2, gy}, 9, 1, (Color){50, 50, 50, 255});
+ 
+    Probe *last = probes[probeCount - 1];
+    if (last->historyCount > 1) {
+        float sum = 0;
+        for (int i = 0; i < last->historyCount; i++) sum += last->speedHistory[i];
+        float avg  = sum / last->historyCount;
+        int   avgY = gy + gh - (int)((avg / maxSpeed) * gh);
+        for (int x = gx; x < gx + gw; x += 6)
+            DrawRectangle(x, avgY, 3, 1, (Color){50, 50, 50, 255});
+        char avgStr[16];
+        snprintf(avgStr, sizeof(avgStr), "AVG %.0f", avg);
+        DrawTextEx(globalFont, avgStr, (Vector2){gx + gw - MeasureTextEx(globalFont, avgStr, 9, 1).x - 2, avgY - 10}, 9, 1, (Color){50, 50, 50, 255});
+    }
+ 
+    unsigned char brightnesses[] = { 255, 180, 120, 80, 60, 50, 40, 35 };
+ 
+    for (int p = 0; p < probeCount; p++) {
+        Probe *probe = probes[p];
+        if (probe->historyCount < 2) continue;
+ 
+        unsigned char br = brightnesses[p % 8];
+        Color c = (Color){br, br, br, 255};
+ 
+        for (int i = 0; i < probe->historyCount - 1; i++) {
+            int   ai  = (probe->historyIndex - probe->historyCount + i     + SPEED_HISTORY) % SPEED_HISTORY;
+            int   bi  = (probe->historyIndex - probe->historyCount + i + 1 + SPEED_HISTORY) % SPEED_HISTORY;
+ 
+            float ax  = gx + (float)i       / (SPEED_HISTORY - 1) * gw;
+            float bx  = gx + (float)(i + 1) / (SPEED_HISTORY - 1) * gw;
+            float ay  = gy + gh - (probe->speedHistory[ai] / maxSpeed) * gh;
+            float by  = gy + gh - (probe->speedHistory[bi] / maxSpeed) * gh;
+ 
+            DrawLineEx((Vector2){ax, ay}, (Vector2){bx, by}, 1.f, c);
+        }
+ 
+        float cur = probe->speedHistory[(probe->historyIndex - 1 + SPEED_HISTORY) % SPEED_HISTORY];
+        char curStr[16];
+        snprintf(curStr, sizeof(curStr), "P%d %.1f", p + 1, cur);
+        int labelY = gy + 2 + p * (PANEL_FONT_SIZE + 2);
+        DrawTextEx(globalFont, curStr, (Vector2){gx + gw - MeasureTextEx(globalFont, curStr, PANEL_FONT_SIZE, 1).x - 4,
+                 labelY}, PANEL_FONT_SIZE, 1, c);
+    }
+}
 
